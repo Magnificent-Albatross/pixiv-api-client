@@ -17,6 +17,13 @@ function callApi(url, options) {
   return axios(finalUrl, options).then((res) => res.data);
 }
 
+const emptyLogger = {
+  info: () => {},
+  debug: () => {},
+  warn: () => {},
+  error: () => {},
+};
+
 class PixivApi {
   constructor(options) {
     this.headers = {
@@ -28,6 +35,11 @@ class PixivApi {
     };
     if (options && options.headers) {
       this.headers = Object.assign({}, this.headers, options.headers);
+    }
+    if (options && options.logger) {
+      this.logger = options.logger;
+    } else {
+      this.logger = emptyLogger;
     }
   }
 
@@ -144,9 +156,13 @@ class PixivApi {
       }),
       data,
     };
+    this.logger.debug('Requesting access token');
     return axios('https://oauth.secure.pixiv.net/auth/token', options)
       .then((res) => {
         this.auth = res.data.response;
+        this.logger.debug(
+          `Received access token: ${this.auth.access_token}, expires in: ${this.auth.expires_in}`
+        );
         this.refreshToken = refreshToken;
         return res.data.response;
       })
@@ -1021,6 +1037,7 @@ class PixivApi {
     return callApi(url, options)
       .then((json) => json)
       .catch((err) => {
+        this.logger.debug('Request to Pixiv failed, retrying with refreshed token');
         if (this.refreshToken) {
           return this.refreshAccessToken(this.refreshToken).then(() => {
             options.headers.Authorization = `Bearer ${this.auth.access_token}`;
