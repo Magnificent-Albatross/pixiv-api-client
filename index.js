@@ -10,20 +10,11 @@ const moment = require('moment');
 const BASE_URL = 'https://app-api.pixiv.net';
 const CLIENT_ID = 'MOBrBDS8blbauoSck0ZfDbtuzpyT';
 const CLIENT_SECRET = 'lsACyCD94FhDUtGTXi3QzcFE2uU1hqtDaKeqrdwj';
-const HASH_SECRET =
-  '28c1fdd170a5204386cb1313c7077b34f83e4aaf4aa829ce78c231e05b0bae2c';
+const HASH_SECRET = '28c1fdd170a5204386cb1313c7077b34f83e4aaf4aa829ce78c231e05b0bae2c';
 
 function callApi(url, options) {
   const finalUrl = /^https?:\/\//i.test(url) ? url : BASE_URL + url;
-  return axios(finalUrl, options)
-    .then(res => res.data)
-    .catch(err => {
-      if (err.response) {
-        throw err.response.data;
-      } else {
-        throw err.message;
-      }
-    });
+  return axios(finalUrl, options);
 }
 
 class PixivApi {
@@ -72,7 +63,7 @@ class PixivApi {
       data,
     };
     return axios('https://oauth.secure.pixiv.net/auth/token', options)
-      .then(res => {
+      .then((res) => {
         this.auth = res.data.response;
         // eslint-disable-next-line no-unneeded-ternary
         this.rememberPassword = rememberPassword === false ? false : true;
@@ -82,7 +73,7 @@ class PixivApi {
         }
         return res.data.response;
       })
-      .catch(err => {
+      .catch((err) => {
         if (err.response) {
           throw err.response.data;
         } else {
@@ -109,11 +100,11 @@ class PixivApi {
       data,
     };
     return axios('https://oauth.secure.pixiv.net/auth/token', options)
-      .then(res => {
+      .then((res) => {
         this.auth = res.data.response;
         return res.data.response;
       })
-      .catch(err => {
+      .catch((err) => {
         if (err.response) {
           throw err.response.data;
         } else {
@@ -154,11 +145,12 @@ class PixivApi {
       data,
     };
     return axios('https://oauth.secure.pixiv.net/auth/token', options)
-      .then(res => {
+      .then((res) => {
         this.auth = res.data.response;
+        this.refreshToken = refreshToken;
         return res.data.response;
       })
-      .catch(err => {
+      .catch((err) => {
         if (err.response) {
           throw err.response.data;
         } else {
@@ -185,12 +177,9 @@ class PixivApi {
       },
       data,
     };
-    return axios(
-      'https://accounts.pixiv.net/api/provisional-accounts/create',
-      options
-    )
-      .then(res => res.data.body)
-      .catch(err => {
+    return axios('https://accounts.pixiv.net/api/provisional-accounts/create', options)
+      .then((res) => res.data.body)
+      .catch((err) => {
         if (err.response) {
           throw err.response.data;
         } else {
@@ -226,10 +215,7 @@ class PixivApi {
       data,
     };
 
-    return this.requestUrl(
-      'https://accounts.pixiv.net/api/account/edit',
-      options
-    );
+    return this.requestUrl('https://accounts.pixiv.net/api/account/edit', options);
   }
 
   sendAccountVerificationEmail() {
@@ -1028,25 +1014,18 @@ class PixivApi {
       return Promise.reject('Url cannot be empty');
     }
     options = options || {};
-    options.headers = Object.assign(
-      this.getDefaultHeaders(),
-      options.headers || {}
-    );
+    options.headers = Object.assign(this.getDefaultHeaders(), options.headers || {});
     if (this.auth && this.auth.access_token) {
       options.headers.Authorization = `Bearer ${this.auth.access_token}`;
     }
     return callApi(url, options)
-      .then(json => json)
-      .catch(err => {
-        if (this.rememberPassword) {
-          if (this.username && this.password) {
-            return this.login(this.username, this.password).then(() => {
-              options.headers.Authorization = `Bearer ${
-                this.auth.access_token
-              }`;
-              return callApi(url, options);
-            });
-          }
+      .then((json) => json)
+      .catch((err) => {
+        if (this.refreshToken) {
+          return this.refreshAccessToken(this.refreshToken).then(() => {
+            options.headers.Authorization = `Bearer ${this.auth.access_token}`;
+            return callApi(url, options);
+          });
         }
         throw err;
       });

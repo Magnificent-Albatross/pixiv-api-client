@@ -1,34 +1,28 @@
 {
-    "extends": [
-        "airbnb-base",
-        "prettier"
+  "extends": ["airbnb-base", "prettier"],
+  "rules": {
+    "prettier/prettier": [
+      "error",
+      {
+        "trailingComma": "es5",
+        "singleQuote": true
+      }
     ],
-    "rules": {
-        "prettier/prettier": ["error", {
-            "trailingComma": "es5",
-            "singleQuote": true
-        }],
-        "arrow-parens": [
-            2,
-            "as-needed"
-        ],
-        "no-param-reassign": 0,
-        "import/no-extraneous-dependencies": [
-            2, 
-            { 
-                "devDependencies": true 
-            }
-        ]
-    },
-    "env": {
-        "es6": true,
-        "browser": true,
-        "node": true
-    },
-    "parserOptions": {
-        "sourceType": "module"
-    },
-    "plugins": [
-        "prettier"
+    "no-param-reassign": 0,
+    "import/no-extraneous-dependencies": [
+      2,
+      {
+        "devDependencies": true
+      }
     ]
+  },
+  "env": {
+    "es6": true,
+    "browser": true,
+    "node": true
+  },
+  "parserOptions": {
+    "sourceType": "module"
+  },
+  "plugins": ["prettier"]
 }
