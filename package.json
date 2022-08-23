@@ -1,5 +1,5 @@
 {
-  "name": "pixiv-api-client",
+  "name": "@magnificent-albatross/pixiv-api-client",
   "version": "0.25.1",
   "description": "Promise based Pixiv API client for react native and node.js",
   "main": "index.js",
@@ -12,7 +12,9 @@
     "email": "gmerudotcom@gmail.com",
     "url": "https://twitter.com/alphak87"
   },
-  "repository": "alphasp/pixiv-api-client",
+  "repository": {
+    "url": "git://github.com/Magnificent-Albatross/pixiv-api-client"
+  },
   "license": "MIT",
   "engines": {
     "node": ">=4"
