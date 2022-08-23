@@ -164,6 +164,7 @@ class PixivApi {
           `Received access token: ${this.auth.access_token}, expires in: ${this.auth.expires_in}`
         );
         this.refreshToken = refreshToken;
+        this.tokenExpiresAt = Date.now() + Number(this.auth.expires_in) * 1000;
         return res.data.response;
       })
       .catch((err) => {
@@ -1025,27 +1026,39 @@ class PixivApi {
     this.headers['Accept-Language'] = lang;
   }
 
-  requestUrl(url, options) {
+  async requestUrl(url, options) {
     if (!url) {
-      return Promise.reject('Url cannot be empty');
+      throw new Error('Url cannot be empty');
     }
     options = options || {};
     options.headers = Object.assign(this.getDefaultHeaders(), options.headers || {});
+    const shouldRefreshToken = this.tokenExpiresAt < Date.now() - 10000;
+    try {
+      if (shouldRefreshToken) {
+        this.logger.debug('Access token has expired, trying to refresh..');
+        await this.refreshAccessToken(this.refreshToken);
+      }
+    } catch (err) {
+      this.logger.debug('Tried refreshing expired token but failed');
+      throw err;
+    }
+
     if (this.auth && this.auth.access_token) {
       options.headers.Authorization = `Bearer ${this.auth.access_token}`;
     }
-    return callApi(url, options)
-      .then((json) => json)
-      .catch((err) => {
-        this.logger.debug('Request to Pixiv failed, retrying with refreshed token');
-        if (this.refreshToken) {
-          return this.refreshAccessToken(this.refreshToken).then(() => {
-            options.headers.Authorization = `Bearer ${this.auth.access_token}`;
-            return callApi(url, options);
-          });
-        }
-        throw err;
-      });
+
+    try {
+      return await callApi(url, options);
+    } catch (err) {
+      if (this.refreshToken) {
+        this.logger.debug('Request to Pixiv failed, retrying with refreshed access token');
+        await this.refreshAccessToken(this.refreshToken);
+        options.headers.Authorization = `Bearer ${this.auth.access_token}`;
+        return callApi(url, options);
+      }
+      this.logger.debug('Request to Pixiv failed and there was no refresh token provided');
+      throw err;
+    }
   }
 }
 
