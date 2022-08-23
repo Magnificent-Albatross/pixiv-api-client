@@ -14,7 +14,7 @@ const HASH_SECRET = '28c1fdd170a5204386cb1313c7077b34f83e4aaf4aa829ce78c231e05b0
 
 function callApi(url, options) {
   const finalUrl = /^https?:\/\//i.test(url) ? url : BASE_URL + url;
-  return axios(finalUrl, options);
+  return axios(finalUrl, options).then((res) => res.data);
 }
 
 class PixivApi {
